@@ -15,6 +15,7 @@ if __name__ == '__main__':
             node.transmit(main=False)
         # print(c.node.E_rank_u_neighbors_beacon)
         #    Run ECCKN
+        c.run_ECCKN(k=3)
         # print('## Update topology ##')
         c.current_topology, c.shortest_path = c.update_topology_shortest_path()
         # print(c.shortest_path)

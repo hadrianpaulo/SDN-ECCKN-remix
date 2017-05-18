@@ -115,7 +115,7 @@ class Sensor:
         Prevent controller sensor node from transmitting main data
         :param main: True if transmitting main data
         """
-        if self.state != State.DEAD and not self.is_controller:
+        if self.state != State.DEAD and not self.is_controller and self.target_main is not None:
             if main and self.state == State.AWAKE:
                 E_usage = (
                     self.E_elec *

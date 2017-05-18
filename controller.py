@@ -231,85 +231,94 @@ class Controller:
 
     def run_ECCKN(self, k=3):
         for node in self.sensor_nodes:
-            N_u = self.orig_topology.neighbors(node.get_name())
-            N_u_awake = sum(
-                [True if self.node_attr[node].is_awake() else False for node in N_u])
-            E_u = {}
-            # If |$N_u$| < k or |$N_v$| < k for any $s_v$ ∈ $N_v$, remain
-            # awake. Return.
+            if not node.is_controller:
+                N_u = self.orig_topology.neighbors(node.get_name())
+                N_u_awake = sum(
+                    [True if self.node_attr[node].is_awake() else False for node in N_u])
+                E_u = {}
+                # If |$N_u$| < k or |$N_v$| < k for any $s_v$ ∈ $N_v$, remain
+                # awake. Return.
 
-            # print(N_u_awake)
-            if N_u_awake < k:
-                # Remain awake
-                node.wake_up()
-                # print(node, " remains awake!")
-                continue
-            else:
-                cont = False
-                for neighbor_node in N_u:
-                    N_v = self.orig_topology.neighbors(neighbor_node)
-                    N_v_k_awake = sum(
-                        [True if self.node_attr[node].is_awake() else False for node in N_v])
-                    if N_v_k_awake < k:
-                        # Remain awake
-                        # print(node, " remains awake!")
-                        node.wake_up()
-                        cont = True
-                        break
-                if cont:
-                    continue
-
-                # Compute $E_u$ = {$s_v$|$s_v$ ∈ $N_u$ and $E_{rank_v}$ >
-                # $E_{rank_u}$}",
-                if self.node_attr[neighbor_node].E_rank_u > node.E_rank_u:
-                    E_u[neighbor_node] = True
-
-                # TODO: Go to sleep if both the following conditions hold.
-                # Remain awake otherwise.\n",
-                #    * Any two nodes in $E_u$ are connected either:
-                #        * directly themselves
-                #        * indirectly through nodes which is in the $s_u$’s 2-hop neighborhood
-                #          that have E_rank_v larger than E_rank_u
-                #
-                #    * Any node in $N_u$ has at least k neighbors from $E_u$.\n",
-                # AKA Any neighbor of node_u should have k neighbors in E_u
-
-                cond1 = False
-                for node_v1 in E_u.keys():
-                    for node_v2 in E_u.keys():
-                        hop_1 = self.current_topology.has_edge(
-                            node_v1, node_v2)
-                        hop_2_nodes = list(nx.common_neighbors(
-                            self.current_topology, node_v1, node_v2))
-                        hop_2_nodes_awake = sum([True if self.node_attr[node].is_awake()
-                                                 else False for node in hop_2_nodes])
-                        # node_u or node_v should have higher E_rank than node
-                        if hop_1:
-                            cond1 = True
-                        if hop_2_nodes_awake > 1:
-                            for node_2 in hop_2_nodes:
-                                if self.node_attr[node_2].E_rank_u > node.E_rank_u and \
-                                        not self.node_attr[node_2].is_controller:
-                                    cond1 = True
-
-                cond2 = False
-                for neighbor in N_u:
-                    res = 0
-                    neighbor_neighbor = self.current_topology.neighbors(
-                        neighbor)
-                    for n in neighbor_neighbor:
-                        try:
-                            if E_u[n]:
-                                res += 1
-                        except KeyError:
-                            # print('Not a neighbor of ', n)
-                            continue
-                    if res >= k:
-                        cond2 = True
-                        break
-
-                if cond1 and cond2:
-                    # print("node " + node.name + " sleeps!")
-                    node.sleep()
-                else:
+                # print(N_u_awake)
+                if N_u_awake < k:
+                    # Remain awake
                     node.wake_up()
+                    # print(node, " remains awake!")
+                    continue
+                else:
+                    cont = False
+                    for neighbor_node in N_u:
+                        N_v = self.orig_topology.neighbors(neighbor_node)
+                        N_v_k_awake = sum(
+                            [True if self.node_attr[node].is_awake() else False for node in N_v])
+                        if N_v_k_awake < k:
+                            # Remain awake
+                            # print(node, " remains awake!")
+                            node.wake_up()
+                            cont = True
+                            break
+                    if cont:
+                        continue
+
+                    # Compute $E_u$ = {$s_v$|$s_v$ ∈ $N_u$ and $E_{rank_v}$ >
+                    # $E_{rank_u}$}",
+                    for neighbor_node in N_u:
+                        if self.node_attr[neighbor_node].E_rank_u > node.E_rank_u:
+                            E_u[neighbor_node] = True
+
+                    # TODO: Go to sleep if both the following conditions hold.
+                    # Remain awake otherwise.\n",
+                    #    * Any two nodes in $E_u$ are connected either:
+                    #        * directly themselves
+                    #        * indirectly through nodes which is in the $s_u$’s 2-hop neighborhood
+                    #          that have E_rank_v larger than E_rank_u
+                    #
+                    #    * Any node in $N_u$ has at least k neighbors from $E_u$.\n",
+                    # AKA Any neighbor of node_u should have k neighbors in E_u
+
+                    cond1 = False
+                    for node_v1 in E_u.keys():
+                        for node_v2 in E_u.keys():
+                            hop_1 = self.current_topology.has_edge(
+                                node_v1, node_v2)
+                            hop_2_nodes = list(nx.common_neighbors(
+                                self.current_topology, node_v1, node_v2))
+                            hop_2_nodes_awake = sum([True if self.node_attr[node].is_awake()
+                                                     else False for node in hop_2_nodes])
+                            # node_u or node_v should have higher E_rank than
+                            # node
+                            if hop_1:
+                                cond1 = True
+                                break
+                            if hop_2_nodes_awake > 1:
+                                for node_2 in hop_2_nodes:
+                                    if self.node_attr[node_2].E_rank_u > node.E_rank_u and \
+                                            not self.node_attr[node_2].is_controller:
+                                        cond1 = True
+                                        break
+
+                    cond2 = False
+                    # print(E_u)
+                    for neighbor in N_u:
+                        res = 0
+                        neighbor_neighbor = self.current_topology.neighbors(
+                            neighbor)
+                        for n in neighbor_neighbor:
+                            try:
+                                if E_u[n]:
+                                    res += 1
+                            except KeyError:
+                                # print('Not a neighbor of ', n)
+                                continue
+                        if res >= k:
+                            cond2 = True
+                            break
+
+                    # print("node" + node.name + "at cond1: ", str(cond1))
+                    # print("node" + node.name + " at cond2: ", str(cond2))
+
+                    if cond1 and cond2:
+                        # print("node " + node.name + " sleeps!")
+                        node.sleep()
+                    else:
+                        node.wake_up()
