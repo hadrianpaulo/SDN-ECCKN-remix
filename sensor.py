@@ -4,7 +4,7 @@ from utils import State
 
 
 class Sensor:
-    def __init__(self, E_rank_u=100001, position=None, controller=False):
+    def __init__(self, E_rank_u=20001, position=None, controller=False):
         """
         :param E_rank_u: Initial Energy
         :param position: Initial X,Y 2-tuple Position else randomized over (200,200)
@@ -39,6 +39,7 @@ class Sensor:
         """
         if State.is_valid(self.state, new_state):
             self.state = new_state
+            print("updated: {}".format(self.state))
         else:
             return
 
@@ -115,8 +116,8 @@ class Sensor:
         Prevent controller sensor node from transmitting main data
         :param main: True if transmitting main data
         """
-        if self.state != State.DEAD and not self.is_controller and self.target_main is not None:
-            if main and self.state == State.AWAKE:
+        if self.state != State.DEAD and not self.is_controller:
+            if main and self.state == State.AWAKE and self.target_main is not None:
                 E_usage = (
                     self.E_elec *
                     self.l_main +
@@ -136,7 +137,10 @@ class Sensor:
                     self.eps_amp *
                     self.l_beacon *
                     self.target_beacon_distance ** 2)
+
                 if E_usage <= self.E_rank_u:
+                    print(self.get_name())
+                    print("E_usage: {}, E_rank_u: {}".format(E_usage, self.E_rank_u))
                     self.update_energy(-1.0 * E_usage)
                     self.target_beacon.receive(
                         (self.get_name(), self.E_rank_u), main=False)

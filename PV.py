@@ -1,13 +1,10 @@
 import numpy as np
 
-
 class PV:
     """
     PV (Photovoltaic) system class
-
     Configuration:
         Divides the
-
     Attributes:
         A (int): Solar panel A in m^2
         hour (int): Hour from 0 to 23
@@ -16,7 +13,7 @@ class PV:
         PR (float): performance ratio (default 0.75)
     """
 
-    def __init__(self, area):
+    def __init__(self, area=11):
         # TODO: Find a fitting area depending on the energy requirement
         # of the system
 
