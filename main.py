@@ -1,5 +1,6 @@
 from controller import Controller
 from PV import PV
+from utils import calc_sensor_distance
 
 if __name__ == '__main__':
     c = Controller(n_nodes=50)
@@ -38,6 +39,10 @@ if __name__ == '__main__':
         #    Execution
         for node in c.sensor_nodes:
             node.transmit()
+
+        #   Controller transmit beacon data to all nodes (for now)
+        for node in c.sensor_nodes:
+            c.node.transmit(controller_distance=calc_sensor_distance(c.node, node))
 
         # post-update properties
         c.update_sensor_properties()

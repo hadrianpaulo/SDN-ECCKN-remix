@@ -110,7 +110,7 @@ class Sensor:
                 self.target_beacon = target
                 self.target_beacon_distance = target_distance
 
-    def transmit(self, main=True):
+    def transmit(self, main=True, controller_distance=0):
         """
         Transmit beacon data, if possible
         Prevent controller sensor node from transmitting main data
@@ -144,6 +144,17 @@ class Sensor:
                     self.update_energy(-1.0 * E_usage)
                     self.target_beacon.receive(
                         (self.get_name(), self.E_rank_u), main=False)
+        
+        elif controller_distance > 0 and self.is_controller:
+            E_usage = (
+                    self.E_elec *
+                    self.l_beacon +
+                    self.eps_amp *
+                    self.l_beacon *
+                    self.controller_distance ** 2)
+
+            self.update_energy(-1.0 * E_usage)
+
 
     def receive(self, neighbor_E_rank_u, main=True):
         """
@@ -160,8 +171,6 @@ class Sensor:
                 self.update_energy(-1.0 * self.E_elec * self.l_beacon)
                 self.E_rank_u_neighbors_beacon[neighbor_E_rank_u[0]
                                                ] = neighbor_E_rank_u[1]
-        if self.is_controller:
-            self.update_energy(200001)
 
     def get_name(self):
         """
