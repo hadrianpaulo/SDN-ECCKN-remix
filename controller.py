@@ -100,6 +100,7 @@ class Controller:
         self.current_topology, self.shortest_path = self.update_topology_shortest_path()
         # Setting initial sensor node targets')
         self.update_sensor_node_targets()
+        self.node.update_energy(-1519)
 
     def update_topology_shortest_path(self, new_graph=None, init=False):
         """

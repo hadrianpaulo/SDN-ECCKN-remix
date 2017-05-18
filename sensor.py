@@ -151,7 +151,7 @@ class Sensor:
                     self.l_beacon +
                     self.eps_amp *
                     self.l_beacon *
-                    self.controller_distance ** 2)
+                    controller_distance ** 2)
 
             self.update_energy(-1.0 * E_usage)
 

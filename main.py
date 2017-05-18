@@ -20,7 +20,7 @@ if __name__ == '__main__':
             node.transmit(main=False)
         # print(c.node.E_rank_u_neighbors_beacon)
         #    Run ECCKN
-        c.run_ECCKN(k=2)
+        c.run_ECCKN(k=10)
 
         # print(controller.node.E_rank_u_neighbors)
         f_alive.write(str(i) + ',' + str(c.get_alive_nodes()) + '\n')
@@ -39,6 +39,8 @@ if __name__ == '__main__':
         #    Execution
         for node in c.sensor_nodes:
             node.transmit()
+
+        c.node.update_energy(-1.0 * (115.85+1018.5+0.0001))
 
         #   Controller transmit beacon data to all nodes (for now)
         for node in c.sensor_nodes:

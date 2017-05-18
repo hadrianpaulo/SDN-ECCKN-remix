@@ -13,7 +13,7 @@ class PV:
         PR (float): performance ratio (default 0.75)
     """
 
-    def __init__(self, area=11):
+    def __init__(self, area=1.23):
         # TODO: Find a fitting area depending on the energy requirement
         # of the system
 
