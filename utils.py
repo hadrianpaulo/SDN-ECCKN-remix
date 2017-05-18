@@ -6,7 +6,7 @@ import networkx as nx
 
 def complete_graph_from_list(node_list):
     graph = nx.empty_graph(0)
-    node_names_list = [node.name for node in node_list]
+    node_names_list = [node.get_name() for node in node_list]
     node_attr = dict(zip(node_names_list, node_list))
     if len(node_list) > 1:
         if graph.is_directed():
@@ -28,9 +28,9 @@ def get_dupes(c):
     next(b, None)
     r = None
     for k, g in zip(a, b):
-        if k.name != g.name:
+        if k.get_name() != g.get_name():
             continue
-        if k.name != r.name:
+        if k.get_name() != r.get_name():
             yield k
             r = k
 

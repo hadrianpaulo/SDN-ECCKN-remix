@@ -4,10 +4,11 @@ from utils import State
 
 
 class Sensor:
-    def __init__(self, E_rank_u=20001, position=None):
+    def __init__(self, E_rank_u=100001, position=None, controller=False):
         """
         :param E_rank_u: Initial Energy
         :param position: Initial X,Y 2-tuple Position else randomized over (200,200)
+        :param controller: Boolean, if sensor node is for controller
         """
         self.E_rank_u = E_rank_u
         self.state = State.INIT
@@ -15,6 +16,7 @@ class Sensor:
             1, 200, 2) if position is None else position
         self.E_elec = 1
         self.eps_amp = 1
+        self.is_controller = controller
 
         # this should only be updated ONCE due to predetermined path supplied
         # by controller
@@ -47,7 +49,7 @@ class Sensor:
         :return:
         """
         # TODO: except for limited energy scenarios
-        if self.name != '(100, 100)':
+        if not self.is_controller:
             self.isolated = True if self.target_main is None else False
             self.l_main = len(self.E_rank_u_neighbors_main.items())
 
@@ -99,12 +101,13 @@ class Sensor:
         :param main: True if setting main target
         :return:
         """
-        if main:
-            self.target_main = target
-            self.target_main_distance = target_distance
-        else:
-            self.target_beacon = target
-            self.target_beacon_distance = target_distance
+        if self.state != State.DEAD and not self.is_controller:
+            if main:
+                self.target_main = target
+                self.target_main_distance = target_distance
+            else:
+                self.target_beacon = target
+                self.target_beacon_distance = target_distance
 
     def transmit(self, main=True):
         """
@@ -112,7 +115,7 @@ class Sensor:
         Prevent controller sensor node from transmitting main data
         :param main: True if transmitting main data
         """
-        if self.state != State.DEAD and self.name != '(100, 100)':
+        if self.state != State.DEAD and not self.is_controller:
             if main and self.state == State.AWAKE:
                 E_usage = (
                     self.E_elec *
@@ -122,7 +125,7 @@ class Sensor:
                     self.target_main_distance ** 2)
                 if E_usage <= self.E_rank_u:
                     self.update_energy(-1.0 * E_usage)
-                    self.target_main.receive((self.name, self.E_rank_u))
+                    self.target_main.receive((self.get_name(), self.E_rank_u))
                 else:
                     self.isolated = True
 
@@ -136,7 +139,7 @@ class Sensor:
                 if E_usage <= self.E_rank_u:
                     self.update_energy(-1.0 * E_usage)
                     self.target_beacon.receive(
-                        (self.name, self.E_rank_u), main=False)
+                        (self.get_name(), self.E_rank_u), main=False)
 
     def receive(self, neighbor_E_rank_u, main=True):
         """
@@ -148,13 +151,15 @@ class Sensor:
             if main and self.state == State.AWAKE:
                 self.update_energy(-1.0 * self.E_elec * self.l_main)
                 self.E_rank_u_neighbors_main[neighbor_E_rank_u[0]
-                ] = neighbor_E_rank_u[1]
+                                             ] = neighbor_E_rank_u[1]
             else:
                 self.update_energy(-1.0 * self.E_elec * self.l_beacon)
                 self.E_rank_u_neighbors_beacon[neighbor_E_rank_u[0]
-                ] = neighbor_E_rank_u[1]
+                                               ] = neighbor_E_rank_u[1]
+        if self.is_controller:
+            self.update_energy(200001)
 
-    def name(self):
+    def get_name(self):
         """
         :return: String of Sensor ID based on position
         """
@@ -178,8 +183,17 @@ class Sensor:
         else:
             return False
 
+    def is_dead(self):
+        """
+        :return: Boolean if sensor is asleep
+        """
+        if self.state == State.DEAD:
+            return True
+        else:
+            return False
+
     def __repr__(self):
-        return self.name
+        return self.get_name()
 
     def __lt__(self, other):
         """
